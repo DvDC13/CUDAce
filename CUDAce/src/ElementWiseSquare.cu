@@ -42,6 +42,11 @@ void ElementWiseSquareCPU(float* cpu_input, float* cpu_output, int arraySize)
 			break;
 		}
 
+		/*
+		* These lines of code are using the AVX2 instruction set 
+		* to perform the element-wise square operation on the CPU.
+		*/
+		
 		// Load 4 elements
 		__m256 input = _mm256_load_ps(cpu_input + i);
 		// Square the elements
