@@ -41,6 +41,10 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)CUDAce\include;$(SolutionDir)CUDAce\handler;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(SolutionDir)CUDAce\include;$(SolutionDir)CUDAce\handler;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -78,6 +82,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="Application.cu" />
+    <CudaCompile Include="src\ElementWiseSquare.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="handler\Error.cuh" />
+    <ClInclude Include="include\ElementWiseSquare.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
