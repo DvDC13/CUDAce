@@ -134,9 +134,13 @@ void ElementWiseSquare(int arraySize)
 	// Calculate grid size for kernel launch
 	int gridSize = (arraySize + blockSize - 1) / blockSize;
 
+	// Calculate the dim3 grid and block size
+	dim3 dimBlock(blockSize, 1, 1);
+	dim3 dimGrid(gridSize, 1, 1);
+
 	// Measure GPU execution time
 	cudaEventRecord(start, 0);
-	ElementWiseSquareKernel << <gridSize, blockSize, 0, stream>> > (device_input, device_output, arraySize);
+	ElementWiseSquareKernel << <dimGrid, dimBlock, 0, stream>> > (device_input, device_output, arraySize);
 	cudaEventRecord(stop, 0);
 	CUDA_CALL(cudaDeviceSynchronize());
 	cudaEventSynchronize(stop);
