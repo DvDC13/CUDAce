@@ -167,25 +167,22 @@ void MatrixMultiplication(const int Matrix1Row, const int Matrix1Col, const int 
 	// Copy the matrices from the host to the device
 	CUDA_CALL(cudaMemcpy(device_Matrix1, host_Matrix1, Matrix1Row * Matrix1Col * sizeof(float), cudaMemcpyHostToDevice));
 	CUDA_CALL(cudaMemcpy(device_Matrix2, host_Matrix2, Matrix2Row * Matrix2Col * sizeof(float), cudaMemcpyHostToDevice));
-	
-	// Calculate the optimal block size
-	int blockSize = 0;
-	int minGridSize = 0;
-	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, MatrixMultiplicationKernel, 0, Matrix1Row * Matrix2Col);
-	blockSize = std::min(blockSize, Matrix1Row * Matrix2Col);
 
-	// Calculate the optimal grid size
-	int gridSize = (Matrix1Row * Matrix2Col + blockSize - 1) / blockSize;
+	// Define block size
+	dim3 blockDim(16, 16, 1);
 
-	// Calculate the dim3 grid and block size
-	dim3 dimBlock(blockSize, blockSize, 1);
-	dim3 dimGrid(gridSize, 1, 1);
+	// Calculate grid size components based on the number of rows and columns of the matrices
+	int gridSizeX = (Matrix1Row + blockDim.x - 1) / blockDim.x;
+	int gridSizeY = (Matrix2Col + blockDim.y - 1) / blockDim.y;
+
+	// Define grid size
+	dim3 gridDim(gridSizeX, gridSizeY, 1);
 
 	// Measure GPU execution time
 	cudaEventRecord(startGpu, 0);
 	
 	// Launch the kernel
-	MatrixMultiplicationKernel << <dimGrid, dimBlock >> > (device_Matrix1, device_Matrix2, device_MatrixResult, Matrix1Row, Matrix1Col, Matrix2Row, Matrix2Col);
+	MatrixMultiplicationKernel << <gridDim, blockDim >> > (device_Matrix1, device_Matrix2, device_MatrixResult, Matrix1Row, Matrix1Col, Matrix2Row, Matrix2Col);
 	
 	cudaEventRecord(stopGpu, 0);
 	cudaEventSynchronize(stopGpu);
