@@ -83,11 +83,13 @@
   <ItemGroup>
     <CudaCompile Include="Application.cu" />
     <CudaCompile Include="src\ElementWiseSquare.cu" />
+    <CudaCompile Include="src\Histogram.cu" />
     <CudaCompile Include="src\MatrixMultiplication.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="handler\Error.cuh" />
     <ClInclude Include="include\ElementWiseSquare.cuh" />
+    <ClInclude Include="include\Histogram.cuh" />
     <ClInclude Include="include\MatrixMultiplication.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

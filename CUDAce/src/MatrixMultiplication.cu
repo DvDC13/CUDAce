@@ -218,7 +218,4 @@ void MatrixMultiplication(const int Matrix1Row, const int Matrix1Col, const int 
 
 	// Reset the device
 	CUDA_CALL(cudaDeviceReset());
-	
-	// The program has successfully terminated
-	exit(EXIT_SUCCESS);
 }
