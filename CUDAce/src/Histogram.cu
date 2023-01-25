@@ -144,4 +144,7 @@ void Histogram(int arraySize)
 	delete[] cpu_input;
 	delete[] cpu_output;
 	delete[] cpu_histogram;
+
+	// Reset the device
+	cudaDeviceReset();
 }

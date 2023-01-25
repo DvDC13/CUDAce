@@ -85,12 +85,14 @@
     <CudaCompile Include="src\ElementWiseSquare.cu" />
     <CudaCompile Include="src\Histogram.cu" />
     <CudaCompile Include="src\MatrixMultiplication.cu" />
+    <CudaCompile Include="src\ReductionSumArray.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="handler\Error.cuh" />
     <ClInclude Include="include\ElementWiseSquare.cuh" />
     <ClInclude Include="include\Histogram.cuh" />
     <ClInclude Include="include\MatrixMultiplication.cuh" />
+    <ClInclude Include="include\ReductionSumArray.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

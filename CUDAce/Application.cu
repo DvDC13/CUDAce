@@ -3,6 +3,7 @@
 #include "ElementWiseSquare.cuh"
 #include "MatrixMultiplication.cuh"
 #include "Histogram.cuh"
+#include "ReductionSumArray.cuh"
 
 int main(int argc, char** argv)
 {
@@ -18,8 +19,9 @@ int main(int argc, char** argv)
 	*/
 
 	unsigned int arraySize = atoi(argv[1]);
-	arraySize = 1 << 20;
-	Histogram(arraySize);
+	//arraySize = 1 << 20;
+	//Histogram(arraySize);
+	ReductionSumArray(arraySize);
 	
 	return 0;
 }
