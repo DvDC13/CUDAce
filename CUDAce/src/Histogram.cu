@@ -16,15 +16,26 @@ __global__ void HistogramKernel(unsigned int* histogram, unsigned int* data, int
 	// Get the index of the thread
 	int gid = blockIdx.x * blockDim.x + threadIdx.x;
 
-	// Check if the index is within the array
-	if (gid >= arraySize) return;
+	// Allocate shared memory
+	__shared__ unsigned int sharedHistogram[256];
 
-	// Get the value of the element
-	unsigned int value = data[gid];
+	// Initialize the shared memory
+	if (threadIdx.x < 256) sharedHistogram[threadIdx.x] = 0;
 
-	// Increment the histogram
-	atomicAdd(&histogram[value], 1);
+	// Synchronize all the threads
+	__syncthreads();
+
+	// Calculate the index of the data locally
+	for (int i = gid; i < arraySize; i += blockDim.x * gridDim.x)
+		atomicAdd(&sharedHistogram[data[i]], 1);
+
+	// Synchronize all the threads
+	__syncthreads();
+	
+	// Add the local histogram to the global histogram
+	if (threadIdx.x < 256) atomicAdd(&histogram[threadIdx.x], sharedHistogram[threadIdx.x]);
 }
+
 /*
 * This function is used to calculate the histogram of an array.
  */
@@ -35,6 +46,11 @@ void Histogram(int arraySize)
 	unsigned int* cpu_output = new unsigned int[256];
 	unsigned int* gpu_input;
 	unsigned int* gpu_histogram;
+
+	// Create the events used to measure the time
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
 
 	// Initialize the input array
 	for (int i = 0; i < arraySize; i++)
@@ -51,18 +67,32 @@ void Histogram(int arraySize)
 	cudaMemset(gpu_histogram, 0, 256 * sizeof(unsigned int));
 
 	// Calculate the number of blocks and threads
-	int blockSize = 32;
-	int numBlocks = (arraySize + blockSize - 1) / blockSize;
+	int blockSize = 512;
+	int numBlocks = arraySize / blockSize;
 
 	// Define the kernel launch configuration
 	dim3 dimBlock(blockSize);
 	dim3 dimGrid(numBlocks);
 	
+	// Start the timer
+	cudaEventRecord(start);
+
 	// Call the kernel
 	HistogramKernel << <dimGrid, dimBlock >> > (gpu_histogram, gpu_input, arraySize);
 
+	// Stop the timer
+	cudaEventRecord(stop);
+
+	// Wait for the kernel to finish
+	cudaDeviceSynchronize();
+	cudaEventSynchronize(stop);
+	
 	// Copy the output array to the CPU
 	cudaMemcpy(cpu_output, gpu_histogram, 256 * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+
+	// Calculate the time
+	float milliseconds = 0;
+	cudaEventElapsedTime(&milliseconds, start, stop);
 
 	// Print the results
 	int j = 0;
@@ -72,6 +102,7 @@ void Histogram(int arraySize)
 		j += cpu_output[i];
 	}
 	std::cout << "Total: " << j << std::endl;
+	std::cout << "Time: " << milliseconds << " ms" << std::endl;
 
 	// Free the memory on the GPU
 	cudaFree(gpu_input);

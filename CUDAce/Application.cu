@@ -18,6 +18,7 @@ int main(int argc, char** argv)
 	*/
 
 	unsigned int arraySize = atoi(argv[1]);
+	arraySize = 1 << 20;
 	Histogram(arraySize);
 	
 	return 0;
