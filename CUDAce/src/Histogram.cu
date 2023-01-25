@@ -37,6 +37,17 @@ __global__ void HistogramKernel(unsigned int* histogram, unsigned int* data, int
 }
 
 /*
+* This function is used to calculate the histogram of an array on the CPU.
+*/
+void HistogramCPU(unsigned int* cpu_histogram, unsigned int* cpu_data, int arraySize)
+{
+	// Iterate till arraySize
+	for (int i = 0; i < arraySize; i++)
+		// Increment the histogram
+		cpu_histogram[cpu_data[i]]++;
+}
+
+/*
 * This function is used to calculate the histogram of an array.
  */
 void Histogram(int arraySize)
@@ -46,6 +57,10 @@ void Histogram(int arraySize)
 	unsigned int* cpu_output = new unsigned int[256];
 	unsigned int* gpu_input;
 	unsigned int* gpu_histogram;
+	unsigned int* cpu_histogram = new unsigned int[256];
+	
+	// Initialize the cpu histogram to 0
+	memset(cpu_histogram, 0, 256 * sizeof(unsigned int));
 
 	// Create the events used to measure the time
 	cudaEvent_t start, stop;
@@ -55,6 +70,22 @@ void Histogram(int arraySize)
 	// Initialize the input array
 	for (int i = 0; i < arraySize; i++)
 		cpu_input[i] = rand() % 256;
+
+	// Start the timer
+	cudaEventRecord(start);
+
+	// Calculate histogram on the CPU
+	HistogramCPU(cpu_histogram, cpu_input, arraySize);
+
+	// Stop the timer
+	cudaEventRecord(stop);
+
+	// Wait for the stop event to complete
+	cudaEventSynchronize(stop);
+
+	// Calculate the time on the CPU
+	float millisecondsCPU = 0;
+	cudaEventElapsedTime(&millisecondsCPU, start, stop);
 
 	// Allocate the memory on the GPU
 	cudaMalloc((void**)&gpu_input, arraySize * sizeof(unsigned int));
@@ -90,9 +121,9 @@ void Histogram(int arraySize)
 	// Copy the output array to the CPU
 	cudaMemcpy(cpu_output, gpu_histogram, 256 * sizeof(unsigned int), cudaMemcpyDeviceToHost);
 
-	// Calculate the time
-	float milliseconds = 0;
-	cudaEventElapsedTime(&milliseconds, start, stop);
+	// Calculate the time on the GPU
+	float millisecondsGPU = 0;
+	cudaEventElapsedTime(&millisecondsGPU, start, stop);
 
 	// Print the results
 	int j = 0;
@@ -102,7 +133,8 @@ void Histogram(int arraySize)
 		j += cpu_output[i];
 	}
 	std::cout << "Total: " << j << std::endl;
-	std::cout << "Time: " << milliseconds << " ms" << std::endl;
+	std::cout << "CPU time: " << millisecondsCPU << " ms" << std::endl;
+	std::cout << "GPU time: " << millisecondsGPU << " ms" << std::endl;
 
 	// Free the memory on the GPU
 	cudaFree(gpu_input);
@@ -111,4 +143,5 @@ void Histogram(int arraySize)
 	// Free the memory on the CPU
 	delete[] cpu_input;
 	delete[] cpu_output;
+	delete[] cpu_histogram;
 }
