@@ -248,7 +248,7 @@ __global__ void ReductionSumArrayKernel6(float* input_array, float* output_array
 * Method: Sequential Addressing.
 */
 template <int blockSize>
-__global__ void ReductionSumArrayKernel7(float* input_array, float* output_array)
+__global__ void ReductionSumArrayKernel7(float* input_array, float* output_array, int arraySize)
 {
 	// Create a shared memory array
 	extern __shared__ float shared_array[];
@@ -261,7 +261,7 @@ __global__ void ReductionSumArrayKernel7(float* input_array, float* output_array
 
 	// Load the input array into the shared memory
 	shared_array[threadIdx.x] = 0;
-	while (index < gridSize)
+	while (index < arraySize)
 	{
 		shared_array[threadIdx.x] += input_array[index] + input_array[index + blockSize];
 		index += gridSize;
@@ -340,67 +340,67 @@ void ReductionSumArray(int arraySize)
 	case 1024:
 		// Calculate the sum of the array
 		cudaEventRecord(start);
-		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array, arraySize);
 		cudaEventRecord(stop);
 		break;
 	case 512:
 		// Calculate the sum of the array
 		cudaEventRecord(start);
-		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array, arraySize);
 		cudaEventRecord(stop);
 		break;
 	case 256:
 		// Calculate the sum of the array
 		cudaEventRecord(start);
-		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array, arraySize);
 		cudaEventRecord(stop);
 		break;
 	case 128:
 		// Calculate the sum of the array
 		cudaEventRecord(start);
-		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array, arraySize);
 		cudaEventRecord(stop);
 		break;
 	case 64:
 		// Calculate the sum of the array
 		cudaEventRecord(start);
-		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array, arraySize);
 		cudaEventRecord(stop);
 		break;
 	case 32:
 		// Calculate the sum of the array
 		cudaEventRecord(start);
-		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array, arraySize);
 		cudaEventRecord(stop);
 		break;
 	case 16:
 		// Calculate the sum of the array
 		cudaEventRecord(start);
-		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array, arraySize);
 		cudaEventRecord(stop);
 		break;
 	case 8:
 		// Calculate the sum of the array
 		cudaEventRecord(start);
-		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array, arraySize);
 		cudaEventRecord(stop);
 		break;
 	case 4:
 		// Calculate the sum of the array
 		cudaEventRecord(start);
-		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array, arraySize);
 		cudaEventRecord(stop);
 		break;
 	case 2:
 		// Calculate the sum of the array
 		cudaEventRecord(start);
-		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array, arraySize);
 		cudaEventRecord(stop);
 		break;
 	case 1:
 		// Calculate the sum of the array
 		cudaEventRecord(start);
-		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array, arraySize);
 		cudaEventRecord(stop);
 		break;
 	}
