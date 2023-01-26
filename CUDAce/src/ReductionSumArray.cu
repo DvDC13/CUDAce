@@ -8,8 +8,6 @@
 #include <iostream>
 #include <cstdlib>
 
-// I used "https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf"
-
 /* 
 * This function is used to calculate the sum of an array on the GPU.
 * Method: Interleaved Addressing.
@@ -215,6 +213,12 @@ __global__ void ReductionSumArrayKernel6(float* input_array, float* output_array
 	__syncthreads();
 
 	// Calculate the sum of the array
+	if (blockSize >= 1024)
+	{ 
+		if (threadIdx.x < 512) { shared_array[threadIdx.x] += shared_array[threadIdx.x + 512]; }
+		__syncthreads();
+	}
+
 	if (blockSize >= 512)
 	{
 		if (threadIdx.x < 256) shared_array[threadIdx.x] += shared_array[threadIdx.x + 256];
@@ -267,6 +271,12 @@ __global__ void ReductionSumArrayKernel7(float* input_array, float* output_array
 	__syncthreads();
 
 	// Calculate the sum of the array
+	if (blockSize >= 1024)
+	{
+		if (threadIdx.x < 512) { shared_array[threadIdx.x] += shared_array[threadIdx.x + 512]; }
+		__syncthreads();
+	}
+	
 	if (blockSize >= 512)
 	{
 		if (threadIdx.x < 256) shared_array[threadIdx.x] += shared_array[threadIdx.x + 256];
@@ -294,6 +304,8 @@ __global__ void ReductionSumArrayKernel7(float* input_array, float* output_array
 /*
 * This function is used to calculate the sum of an array.
 * 7 methods are used to calculate the sum of the array.
+* We use the last method to calculate the sum of the array.
+* The last method is the fastest method.
 */
 void ReductionSumArray(int arraySize)
 {
@@ -314,7 +326,7 @@ void ReductionSumArray(int arraySize)
 	cudaMemcpy(d_input_array, input_array, arraySize * sizeof(float), cudaMemcpyHostToDevice);
 
 	// Define the block size
-	const int blockSize = 256;
+	const int blockSize = 1024;
 	int gridSize = (arraySize + blockSize - 1) / blockSize;
 	int sharedMemorySize = blockSize * sizeof(float);
 
@@ -322,70 +334,83 @@ void ReductionSumArray(int arraySize)
 	cudaEvent_t start, stop;
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
+
+	switch (blockSize)
+	{
+	case 1024:
+		// Calculate the sum of the array
+		cudaEventRecord(start);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		cudaEventRecord(stop);
+		break;
+	case 512:
+		// Calculate the sum of the array
+		cudaEventRecord(start);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		cudaEventRecord(stop);
+		break;
+	case 256:
+		// Calculate the sum of the array
+		cudaEventRecord(start);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		cudaEventRecord(stop);
+		break;
+	case 128:
+		// Calculate the sum of the array
+		cudaEventRecord(start);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		cudaEventRecord(stop);
+		break;
+	case 64:
+		// Calculate the sum of the array
+		cudaEventRecord(start);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		cudaEventRecord(stop);
+		break;
+	case 32:
+		// Calculate the sum of the array
+		cudaEventRecord(start);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		cudaEventRecord(stop);
+		break;
+	case 16:
+		// Calculate the sum of the array
+		cudaEventRecord(start);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		cudaEventRecord(stop);
+		break;
+	case 8:
+		// Calculate the sum of the array
+		cudaEventRecord(start);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		cudaEventRecord(stop);
+		break;
+	case 4:
+		// Calculate the sum of the array
+		cudaEventRecord(start);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		cudaEventRecord(stop);
+		break;
+	case 2:
+		// Calculate the sum of the array
+		cudaEventRecord(start);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		cudaEventRecord(stop);
+		break;
+	case 1:
+		// Calculate the sum of the array
+		cudaEventRecord(start);
+		ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
+		cudaEventRecord(stop);
+		break;
+	}
 	
-	// Calculate the sum of the array on the GPU
-	// Method 1
-	cudaEventRecord(start);
-	ReductionSumArrayKernel1 << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
-	cudaEventRecord(stop);
-	cudaDeviceSynchronize();
+	// Wait for the event to complete
 	cudaEventSynchronize(stop);
-	float milliseconds1 = 0;
-	cudaEventElapsedTime(&milliseconds1, start, stop);
-
-	// Method 2
-	cudaEventRecord(start);
-	ReductionSumArrayKernel2 << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
-	cudaEventRecord(stop);
-	cudaDeviceSynchronize();
-	cudaEventSynchronize(stop);
-	float milliseconds2 = 0;
-	cudaEventElapsedTime(&milliseconds2, start, stop);
-
-	// Method 3
-	cudaEventRecord(start);
-	ReductionSumArrayKernel3 << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
-	cudaEventRecord(stop);
-	cudaDeviceSynchronize();
-	cudaEventSynchronize(stop);
-	float milliseconds3 = 0;
-	cudaEventElapsedTime(&milliseconds3, start, stop);
 	
-	// Method 4
-	cudaEventRecord(start);
-	ReductionSumArrayKernel4 << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
-	cudaEventRecord(stop);
-	cudaDeviceSynchronize();
-	cudaEventSynchronize(stop);
-	float milliseconds4 = 0;
-	cudaEventElapsedTime(&milliseconds4, start, stop);
-	
-	// Method 5
-	cudaEventRecord(start);
-	ReductionSumArrayKernel5 << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
-	cudaEventRecord(stop);
-	cudaDeviceSynchronize();
-	cudaEventSynchronize(stop);
-	float milliseconds5 = 0;
-	cudaEventElapsedTime(&milliseconds5, start, stop);
-
-	// Method 6
-	cudaEventRecord(start);
-	ReductionSumArrayKernel6<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
-	cudaEventRecord(stop);
-	cudaDeviceSynchronize();
-	cudaEventSynchronize(stop);
-	float milliseconds6 = 0;
-	cudaEventElapsedTime(&milliseconds6, start, stop);
-
-	// Method 7
-	cudaEventRecord(start);
-	ReductionSumArrayKernel7<blockSize> << <gridSize, blockSize, sharedMemorySize >> > (d_input_array, d_output_array);
-	cudaEventRecord(stop);
-	cudaDeviceSynchronize();
-	cudaEventSynchronize(stop);
-	float milliseconds7 = 0;
-	cudaEventElapsedTime(&milliseconds7, start, stop);
+	// Calculate the time
+	float milliseconds = 0;
+	cudaEventElapsedTime(&milliseconds, start, stop);
 
 	// Copy the output array from the GPU
 	cudaMemcpy(output_array, d_output_array, arraySize * sizeof(float), cudaMemcpyDeviceToHost);
@@ -394,17 +419,14 @@ void ReductionSumArray(int arraySize)
 	std::cout << "The sum of the array is: " << output_array[0] << std::endl;
 
 	// Print the time
-	std::cout << "Method 1: " << milliseconds1 << " ms" << std::endl;
-	std::cout << "Method 2: " << milliseconds2 << " ms" << std::endl;
-	std::cout << "Method 3: " << milliseconds3 << " ms" << std::endl;
-	std::cout << "Method 4: " << milliseconds4 << " ms" << std::endl;
-	std::cout << "Method 5: " << milliseconds5 << " ms" << std::endl;
-	std::cout << "Method 6: " << milliseconds6 << " ms" << std::endl;
-	std::cout << "Method 7: " << milliseconds7 << " ms" << std::endl;
+	std::cout << "The time to calculate the sum of the array is: " << milliseconds << " ms" << std::endl;
 
 	// Free the memory
 	delete[] input_array;
 	delete[] output_array;
 	cudaFree(d_input_array);
 	cudaFree(d_output_array);
+
+	// Reset the device
+	cudaDeviceReset();
 }
