@@ -1,3 +1,15 @@
+/*
+    Calculate the sum of the Taylor series of the sine function for a given number of steps and terms between 0 and PI.
+    The Taylor series is calculated using the formula:
+        sin(x) = x - x^3/3! + x^5/5! - x^7/7! + ...
+    The result is calculated using the trapezoidal rule for integration correction.
+*/
+
+/*
+    Run:
+        ./main 1000000 1000 4
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <chrono>
