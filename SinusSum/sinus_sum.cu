@@ -7,7 +7,7 @@
 
 /*
     Run:
-        ./main 1000000 1000 4
+        ./main <steps> <terms> <threads>
 */
 
 #include <stdio.h>
@@ -127,7 +127,6 @@ void multiThreadedGPU(int steps, int terms) {
     printf("Time taken by function: %lu milliseconds\n", duration.count());
 }
 
-// ./exe 1000000 1000 4
 int main(int argc, char *argv[]) {
 
     int steps = atoi(argv[1]);
