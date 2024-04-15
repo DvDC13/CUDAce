@@ -1,5 +1,5 @@
 /*
-    Sum 2 vectors
+    Add 2 vectors
 */
 
 /*
@@ -14,7 +14,7 @@
 #include "device_launch_parameters.h"
 #include "thrust/device_vector.h"
 
-void sum_vec(int* a, int* b, int* c, int size)
+void add_vec(int* a, int* b, int* c, int size)
 {
     for (int i = 0; i < size; i++)
     {
@@ -22,7 +22,7 @@ void sum_vec(int* a, int* b, int* c, int size)
     }
 }
 
-__global__ void sum_vec_cuda(int* a, int* b, int* c, int size)
+__global__ void add_vec_cuda(int* a, int* b, int* c, int size)
 {
     int gid = blockIdx.x * blockDim.x + threadIdx.x;
     while (gid < size)
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     int* c_gpu = (int*)malloc(size * sizeof(int));
 
     auto start = std::chrono::high_resolution_clock::now();
-    sum_vec(a, b, c_cpu, size);
+    add_vec(a, b, c_cpu, size);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> duration = end - start;
     printf("CPU time: %f ms\n", duration.count());
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     int blocks = (size + threads - 1) / threads;
 
     start = std::chrono::high_resolution_clock::now();
-    sum_vec_cuda<<<blocks, threads>>>(d_a, d_b, d_c, size);
+    add_vec_cuda<<<blocks, threads>>>(d_a, d_b, d_c, size);
     cudaDeviceSynchronize();
     end = std::chrono::high_resolution_clock::now();
     duration = end - start;

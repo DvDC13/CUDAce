@@ -6,7 +6,7 @@ TARGET=main
 
 all: main
 
-main: vector_sum.cu
+main: vector_add.cu
 	$(NVCC) $(NVCCFLAGS) -o $(TARGET) $<
 
 clean:
