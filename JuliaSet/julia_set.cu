@@ -1,3 +1,12 @@
+/*
+    Calculate the Julia set for a given number of threads and blocks.
+*/
+
+/*
+    Run:
+        ./main
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <chrono>
