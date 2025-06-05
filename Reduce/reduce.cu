@@ -93,6 +93,32 @@ __global__ void reduce2(int* d_in, int* d_out, int size)
     }
 }
 
+// First Add During Load
+__global__ void reduce3(int* d_in, int* d_out, int size)
+{
+    extern __shared__ int s_in[];
+
+    int tid = threadIdx.x;
+    int gid = blockIdx.x * (blockDim.x * 2) + threadIdx.x;
+
+    s_in[tid] = d_in[gid] + d_in[gid + blockDim.x];
+    __syncthreads();
+
+    for (int s = blockDim.x / 2; s > 0; s >>= 1)
+    {
+        if (tid < s)
+        {
+            s_in[tid] += s_in[tid + s];
+        }
+        __syncthreads();
+    }
+
+    if (tid == 0)
+    {
+        atomicAdd(d_out, s_in[0]);
+    }
+}
+
 void sum_cpu(int* h_in, int& h_out, int size)
 {
     for (int i = 0; i < size; i++)
@@ -160,6 +186,19 @@ int main(int argc, char** argv)
     duration = end - start;
     printf("GPU reduce2 time: %f ms\n", duration.count());
 
+    int* d_out_reduce3;
+    cudaMalloc(&d_out_reduce3, sizeof(int));
+
+    grid = (size + block.x * 2 - 1) / (block.x * 2);
+
+    // First Add During Load
+    start = std::chrono::high_resolution_clock::now();
+    reduce3<<<grid, block, sizeof(int) * block.x * 2>>>(d_in, d_out_reduce3, size);
+    cudaDeviceSynchronize();
+    end = std::chrono::high_resolution_clock::now();
+    duration = end - start;
+    printf("GPU reduce3 time: %f ms\n", duration.count());
+
     int* d_out_reduce0_gpu = new int;
     cudaMemcpy(d_out_reduce0_gpu, d_out_reduce0, sizeof(int), cudaMemcpyDeviceToHost);
 
@@ -169,10 +208,14 @@ int main(int argc, char** argv)
     int* d_out_reduce2_gpu = new int;
     cudaMemcpy(d_out_reduce2_gpu, d_out_reduce2, sizeof(int), cudaMemcpyDeviceToHost);
 
+    int* d_out_reduce3_gpu = new int;
+    cudaMemcpy(d_out_reduce3_gpu, d_out_reduce3, sizeof(int), cudaMemcpyDeviceToHost);
+
     printf("CPU: %d\n", h_out_cpu);
     printf("GPU reduce0: %d\n", *d_out_reduce0_gpu);
     printf("GPU reduce1: %d\n", *d_out_reduce1_gpu);
     printf("GPU reduce2: %d\n", *d_out_reduce2_gpu);
+    printf("GPU reduce3: %d\n", *d_out_reduce3_gpu);
 
     delete[] h_in;
 
@@ -180,6 +223,7 @@ int main(int argc, char** argv)
     cudaFree(d_out_reduce0);
     cudaFree(d_out_reduce1);
     cudaFree(d_out_reduce2);
+    cudaFree(d_out_reduce3);
 
     return EXIT_SUCCESS; 
 }
