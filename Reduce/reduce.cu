@@ -40,6 +40,33 @@ __global__ void reduce0(int* d_in, int* d_out, int size)
     }
 }
 
+// Interleaved Addressing without branch divergence and % operation
+__global__ void reduce1(int* d_in, int* d_out, int size)
+{
+    extern __shared__ int s_in[];
+
+    int tid = threadIdx.x;
+    int gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+    s_in[tid] = d_in[gid];
+    __syncthreads();
+
+    for (int s = 1; s < blockDim.x; s *= 2)
+    {
+        int index = 2 * s * tid;
+        if (index < blockDim.x)
+        {
+            s_in[index] += s_in[index + s];
+        }
+        __syncthreads();
+    }
+
+    if (tid == 0)
+    {
+        atomicAdd(d_out, s_in[0]);
+    }
+}
+
 void sum_cpu(int* h_in, int& h_out, int size)
 {
     for (int i = 0; i < size; i++)
@@ -68,30 +95,49 @@ int main(int argc, char** argv)
     printf("CPU time: %f ms\n", duration.count());
 
     int* d_in;
-    int* d_out;
-
     cudaMalloc(&d_in, size * sizeof(int));
-    cudaMalloc(&d_out, sizeof(int));
-
     cudaMemcpy(d_in, h_in, size * sizeof(int), cudaMemcpyHostToDevice);
 
     dim3 block(256);
     dim3 grid((size + block.x - 1) / block.x);
+
+    int* d_out_reduce0;
+    cudaMalloc(&d_out_reduce0, sizeof(int));
     
+    // Interleaved Addressing
     start = std::chrono::high_resolution_clock::now();
-    reduce0<<<grid, block, sizeof(int) * block.x>>>(d_in, d_out, size);
+    reduce0<<<grid, block, sizeof(int) * block.x>>>(d_in, d_out_reduce0, size);
     cudaDeviceSynchronize();
     end = std::chrono::high_resolution_clock::now();
     duration = end - start;
-    printf("GPU time: %f ms\n", duration.count());
+    printf("GPU reduce0 time: %f ms\n", duration.count());
 
-    int* d_out_gpu = new int;
-    cudaMemcpy(d_out_gpu, d_out, sizeof(int), cudaMemcpyDeviceToHost);
+    int* d_out_reduce1;
+    cudaMalloc(&d_out_reduce1, sizeof(int));
+
+    // Interleaved Addressing without branch divergence and % operation
+    start = std::chrono::high_resolution_clock::now();
+    reduce1<<<grid, block, sizeof(int) * block.x>>>(d_in, d_out_reduce1, size);
+    cudaDeviceSynchronize();
+    end = std::chrono::high_resolution_clock::now();
+    duration = end - start;
+    printf("GPU reduce1 time: %f ms\n", duration.count());
+
+    int* d_out_reduce0_gpu = new int;
+    cudaMemcpy(d_out_reduce0_gpu, d_out_reduce0, sizeof(int), cudaMemcpyDeviceToHost);
+
+    int* d_out_reduce1_gpu = new int;
+    cudaMemcpy(d_out_reduce1_gpu, d_out_reduce1, sizeof(int), cudaMemcpyDeviceToHost);
 
     printf("CPU: %d\n", h_out_cpu);
-    printf("GPU: %d\n", *d_out_gpu);
+    printf("GPU reduce0: %d\n", *d_out_reduce0_gpu);
+    printf("GPU reduce1: %d\n", *d_out_reduce1_gpu);
 
     delete[] h_in;
+
+    cudaFree(d_in);
+    cudaFree(d_out_reduce0);
+    cudaFree(d_out_reduce1);
 
     return EXIT_SUCCESS; 
 }
